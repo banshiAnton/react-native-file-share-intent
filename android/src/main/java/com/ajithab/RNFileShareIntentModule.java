@@ -3,6 +3,7 @@ package com.ajithab;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -86,7 +87,9 @@ public class RNFileShareIntentModule extends ReactContextBaseJavaModule {
     if(mActivity == null) { return; }
 
     Intent intent = mActivity.getIntent();
+    if (intent == null) { return; }
     String type = intent.getType();
+    if (TextUtils.isEmpty(type)) { return; }
     if ("text/plain".equals(type)) {
       intent.removeExtra(Intent.EXTRA_TEXT);
     } else if (type.startsWith("image/") || type.startsWith("video/") || type.startsWith("application/")) {
