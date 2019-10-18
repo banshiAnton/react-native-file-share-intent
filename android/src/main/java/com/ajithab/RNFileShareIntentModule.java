@@ -1,49 +1,55 @@
-
 package com.ajithab;
 
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.Callback;
-
-import com.ajithab.RNFileShareIntentPackage;
-
-import java.util.Map;
-import java.util.ArrayList;
-
-import android.widget.Toast;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+
+import java.util.ArrayList;
 
 
 public class RNFileShareIntentModule extends ReactContextBaseJavaModule {
 
+  public static String TAG = "[ReactContextBaseJavaModule]";
+
   private final ReactApplicationContext reactContext;
+
+  public static Intent shareIntent = null;
 
   public RNFileShareIntentModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
   }
 
-
-  protected void onNewIntent(Intent intent) {
-    Activity mActivity = getCurrentActivity();
-    
-    if(mActivity == null) { return; }
-
-    mActivity.setIntent(intent);
-  }  
+  public static void setShareIntent(Intent intent) {
+    shareIntent = new Intent(intent);
+  }
 
   @ReactMethod
   public void getFilepath(Callback successCallback) {
-    Activity mActivity = getCurrentActivity();
-    
-    if(mActivity == null) { return; }
-    
-    Intent intent = mActivity.getIntent();
+    Log.d(TAG, "[getFilepath][shareIntent]: " + shareIntent);
+    Intent intent = null;
+    if (shareIntent != null) {
+      intent = shareIntent;
+    } else {
+      Activity mActivity = getCurrentActivity();
+      if(mActivity == null) { return; }
+      intent = mActivity.getIntent();
+      Log.d(TAG, "[getFilepath][getCurrentActivity]: " + intent);
+    }
+
     String action = intent.getAction();
     String type = intent.getType();
+
+    Log.d(TAG, "[getFilepath]: " + action + " " + type);
+    Log.d(TAG, "[getFilepath][intent]: " + intent);
 
     if (Intent.ACTION_SEND.equals(action) && type != null) {
       if ("text/plain".equals(type)) {
@@ -75,12 +81,15 @@ public class RNFileShareIntentModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void clearFilePath() {
+    shareIntent = null;
     Activity mActivity = getCurrentActivity();
     
     if(mActivity == null) { return; }
 
     Intent intent = mActivity.getIntent();
+    if (intent == null) { return; }
     String type = intent.getType();
+    if (TextUtils.isEmpty(type)) { return; }
     if ("text/plain".equals(type)) {
       intent.removeExtra(Intent.EXTRA_TEXT);
     } else if (type.startsWith("image/") || type.startsWith("video/") || type.startsWith("application/")) {
